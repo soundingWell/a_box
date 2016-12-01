@@ -40,7 +40,7 @@ state_ = "counting";
   setBrightness(0xF0);
   clearDisplay();  // Clears display, resets cursor
   
-  millis_ = millis();
+  box_time.millis_ = millis();
 // ------------------------
 
 // --- Big Button ---
@@ -82,7 +82,7 @@ void clearDisplay()
 // Write the time to the display. 
 // Format is hh : mm
 void writeTime() {
-  sprintf(temp_string_, "02d%02d", hours_, minutes_);
+  sprintf(temp_string_, "02d%02d", box_time.hours_, box_time.minutes_);
   s7s.print(temp_string_);
 }
 
@@ -125,10 +125,10 @@ void loop() {
   if (state_ == "counting") {
     checkForTimeChangeInput();
     if (state_ != "serving") {  // state could change if there was input.
-      if (millis() > (millis_ + 1000)) {  // A second has passed.
+      if (millis() > (box_time.millis_ + 1000)) {  // A second has passed.
         box_time.changeTime(-1, 0, 0);
         writeTime();
-        millis_ += 1000;
+        box_time.millis_ += 1000;
       }
     }
     delay(100);

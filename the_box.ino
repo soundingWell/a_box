@@ -1,3 +1,4 @@
+#include <BoxSevenSegment.h>
 #include <BoxTime.h>
 #include <Servo.h>
 #include <SoftwareSerial.h>
@@ -11,7 +12,7 @@ String state_;
 // Servo angles.
 const int fill_angle_ = 155;
 const int empty_angle_ = 20;
-// ------------------------------
+// ------------------------
 
 // ------- PINS ----------
 const int led_PIN = 3;
@@ -24,26 +25,23 @@ const int servo_PIN = 9;
 // ---------------------
 
 // ------- OBJECTS ------
-SoftwareSerial s7s(softwareRx_PIN, softwareTx_PIN);
 Servo servo;
 BoxTime box_time;
+SoftwareSerial s7s(softwareTx_PIN, softwareRx_PIN);
+BoxSevenSegment b7s(&s7s);
 // ----------------------
 
 void setup() {
 // -------- GLOBAL --------
-state_ = "counting";
-
-// ------- 7 SEGEMENT -----
-  //  The default of the s7s is 9600.
-  s7s.begin(9600);
-  
-  setBrightness(0xF0);
-  clearDisplay();  // Clears display, resets cursor
-  
-  box_time.millis_ = millis();
+  state_ = "counting";
+  box_time.millis_ = millis(); // Start the counter at current time.
 // ------------------------
 
-// --- Big Button ---
+// ------- 7 SEGEMENT -----
+  // b7s = BoxSevenSegment(softwareRx_PIN, softwareTx_PIN);  
+// ------------------------
+
+// ------ Big Button -----
   pinMode(led_PIN, OUTPUT);
   pinMode(led_PIN, LOW);
 
@@ -59,31 +57,10 @@ state_ = "counting";
   pinMode(time_down_btn_PIN, HIGH); 
 // -----------------------
 
-//  --- Servo ------
+// -------- Servo --------
   servo.attach(servo_PIN);
   servo.write(fill_angle_);
-// ----------------
-}
-
-// Set the displays brightness. Should receive byte with the value
-//  to set the brightness to
-//   0--------127--------255
-void setBrightness(byte value)
-{
-  s7s.write(0x7A);  // Set brightness command byte
-  s7s.write(value);  // brightness data byte
-}
-
-void clearDisplay()
-{
-  s7s.write(0x76);  // Clear display command
-}
-
-// Write the time to the display. 
-// Format is hh : mm
-void writeTime() {
-  sprintf(temp_string_, "02d%02d", box_time.hours_, box_time.minutes_);
-  s7s.print(temp_string_);
+// -----------------------
 }
 
 // Loop waiting for button press.
@@ -127,7 +104,7 @@ void loop() {
     if (state_ != "serving") {  // state could change if there was input.
       if (millis() > (box_time.millis_ + 1000)) {  // A second has passed.
         box_time.changeTime(-1, 0, 0);
-        writeTime();
+        b7s.writeTime(box_time.minutes_, box_time.hours_);
         box_time.millis_ += 1000;
       }
     }

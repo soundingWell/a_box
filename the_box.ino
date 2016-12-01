@@ -1,12 +1,8 @@
-
+#include <BoxTime.h>
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
 // ------ GLOBAL VARIABLES -----
-long millis_;
-int seconds_ = 0;
-int hours_ = 0;
-int minutes_ = 1;
 char temp_string_[100]; //Used for sprintf
 
 // 3 possible states: "counting", "waiting", "serving".
@@ -30,6 +26,7 @@ const int servo_PIN = 9;
 // ------- OBJECTS ------
 SoftwareSerial s7s(softwareRx_PIN, softwareTx_PIN);
 Servo servo;
+BoxTime box_time;
 // ----------------------
 
 void setup() {
@@ -64,7 +61,7 @@ state_ = "counting";
 
 //  --- Servo ------
   servo.attach(servo_PIN);
-  servo.write(fill_angle);
+  servo.write(fill_angle_);
 // ----------------
 }
 
@@ -80,34 +77,6 @@ void setBrightness(byte value)
 void clearDisplay()
 {
   s7s.write(0x76);  // Clear display command
-}
-
-// Parameters are the time change.
-void updateTime(byte seconds=0, byte minutes=0, byte hours=0) {
-  seconds_ += seconds;
-  minutes_ += minutes;
-  hours_ += hours;
-
-  if (seconds_ < 0) {
-    seconds_ = 59;
-    minutes_ -= 1;
-  } else if (seconds_ > 59) {
-    minutes += 1;
-    seconds_ == 0;
-  }
-
-  if (minutes_ < 0) {
-    minutes_ = 59;
-    hours_ -= 1;
-  } else if (minutes > 59) {
-    minutes_ = 0;
-    hours_ += 1;
-  }
-
-  // Timer has run out.
-  if (hours_ < 0) {
-    state_="waiting";
-  }
 }
 
 // Write the time to the display. 
@@ -137,31 +106,30 @@ void waitForPress() {
 void checkForTimeChangeInput() {
   bool did_press_time_up = digitalRead(time_up_btn_PIN);
   if (did_press_time_up) {
-    updateTime(0, 5, 0);
+    state_ = box_time.changeTime(0, 5, 0);
   }
 
   bool did_press_time_down = digitalRead(time_down_btn_PIN);
   if (did_press_time_down) {
-    updateTime(0, -5, 0);
+    state_ = box_time.changeTime(0, -5, 0);
   }
 }
 
 void dispenseFood() {
-  servo.write(empty_angle);
-
+  servo.write(empty_angle_);
   delay(1000);
-
-  servo.write(fill_angle);
-  
+  servo.write(fill_angle_); 
 }
 
 void loop() {
   if (state_ == "counting") {
     checkForTimeChangeInput();
-    if (millis() > (millis_ + 1000)) {  // A second has passed.
-      updateTime(-1, 0, 0);
-      writeTime();
-      millis_ += 1000;
+    if (state_ != "serving") {  // state could change if there was input.
+      if (millis() > (millis_ + 1000)) {  // A second has passed.
+        box_time.changeTime(-1, 0, 0);
+        writeTime();
+        millis_ += 1000;
+      }
     }
     delay(100);
   } else if (state_ == "waiting") {

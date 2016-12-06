@@ -9,12 +9,14 @@ class BoxSevenSegment {
  	BoxSevenSegment(SoftwareSerial * s7s) {
  		s7s_ = s7s;
  		s7s_->begin(9600);
- 		setBrightness(0xF0);
+ 		setBrightness(100);
  		clearDisplay();
+ 		setColon();
  	}
 	void setBrightness(byte value);
 	void clearDisplay();
-	void writeTime(int minutes, int hours);
+	void setColon();
+	void writeTime(const int seconds, const int minutes, const int hours);
 
  private:
 	SoftwareSerial * s7s_;

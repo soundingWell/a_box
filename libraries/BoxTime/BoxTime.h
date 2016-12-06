@@ -5,6 +5,13 @@
 
 class BoxTime {
  public:
+  BoxTime(int millis, int seconds, int minutes, int hours) {
+  	millis_ = millis;
+  	seconds_ = seconds;
+  	minutes_ = minutes;
+  	hours_ = hours;
+  }
+
   BoxTime() {
   	millis_ = 0;
   	seconds_ = 0;
@@ -12,10 +19,13 @@ class BoxTime {
   	hours_ = 0;
   }
 
-  // Returns 'waiting' unless timer has run out. then returns 'serving'.
-  String changeTime(int seconds=0, int minutes=0, int hours=0);
+  void changeTime(int seconds=0, int minutes=0, int hours=0);
+
+  // Return true is we're out of time.
+  bool isTimeUp();
   
-  long millis_;
+  // millis_ actually counts up, not down.
+  uint64_t millis_;
   int seconds_;
   int minutes_;
   int hours_;
